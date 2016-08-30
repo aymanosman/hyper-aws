@@ -18,6 +18,7 @@
   "homepage": "https://github.com/aymanosman/hyper-aws#readme",
   "dependencies": {
     "aws-sdk": "^2.5.4",
-    "blessed": "^0.1.81"
+    "blessed": "^0.1.81",
+    "lodash": "^4.15.0"
   }
 }
