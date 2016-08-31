@@ -46,7 +46,7 @@ if (module === require.main) {
                         console.log("Found %s instances", coll.length);
                         let data = _.values(coll)
                         let rows = _.map(coll, (c) => _.values(awsToNode(c)))
-                        let header = ["NAME", "TYPE", "STATE", "INTERNAL_IP", "EXTERNAL_IP"];
+                        let header = ["NAME", "TYPE", "INTERNAL_IP", "EXTERNAL_IP", "STATE"];
                         let output = table.default([header].concat(rows), {
                             border: table.getBorderCharacters("norc")
                         });
