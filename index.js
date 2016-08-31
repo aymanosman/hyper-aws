@@ -43,7 +43,6 @@ if (module === require.main) {
                     }
 
                     function printCollection(coll) {
-                        console.log("Found %s instances", coll.length);
                         let data = _.values(coll)
                         let rows = _.map(coll, (c) => _.values(awsToNode(c)))
                         let header = ["NAME", "TYPE", "INTERNAL_IP", "EXTERNAL_IP", "STATE"];
