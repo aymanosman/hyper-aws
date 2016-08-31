@@ -2,7 +2,7 @@
 
 var _ = require("lodash");
 var aws = require("aws-sdk");
-var table = require("table");
+var table = require("text-table");
 
 aws.config.region = "eu-west-1";
 var ec2 = new aws.EC2;
@@ -47,9 +47,7 @@ if (module === require.main) {
                         let data = _.values(coll)
                         let rows = _.map(coll, (c) => _.values(awsToNode(c)))
                         let header = ["NAME", "TYPE", "INTERNAL_IP", "EXTERNAL_IP", "STATE"];
-                        let output = table.default([header].concat(rows), {
-                            border: table.getBorderCharacters("norc")
-                        });
+                        let output = table([header].concat(rows));
                         console.log(output);
                     }
                     printCollection(instances)
