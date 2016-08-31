@@ -2,6 +2,7 @@
 
 var _ = require("lodash");
 var aws = require("aws-sdk");
+var table = require("table");
 
 aws.config.region = "eu-west-1";
 var ec2 = new aws.EC2;
@@ -35,15 +36,21 @@ if (module === require.main) {
                         return {
                             name: instance.InstanceId,
                             nodeType: instance.InstanceType,
-                            state: instance.State,
                             internalIP: instance.PrivateIpAddress,
-                            publicIP: instance.PublicIpAddress
+                            publicIP: instance.PublicIpAddress,
+                            state: instance.State.Name
                         }
                     }
 
                     function printCollection(coll) {
                         console.log("Found %s instances", coll.length);
-                        coll.forEach((c) => console.log(awsToNode(c)));
+                        let data = _.values(coll)
+                        let rows = _.map(coll, (c) => _.values(awsToNode(c)))
+                        let header = ["NAME", "TYPE", "STATE", "INTERNAL_IP", "EXTERNAL_IP"];
+                        let output = table.default([header].concat(rows), {
+                            border: table.getBorderCharacters("norc")
+                        });
+                        console.log(output);
                     }
                     printCollection(instances)
                 }).catch(handleError);
