@@ -33,8 +33,15 @@ if (module === require.main) {
                         | STATUS ||
                      *
                      */
+                        function mkName() {
+                            let ff = '';
+
+                            let name = instance.InstanceId + ff;
+                            return name;
+                        }
+
                         return {
-                            name: instance.InstanceId,
+                            name: mkName(),
                             nodeType: instance.InstanceType,
                             internalIP: instance.PrivateIpAddress,
                             publicIP: instance.PublicIpAddress,
