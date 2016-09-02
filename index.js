@@ -1,10 +1,11 @@
 "use strict";
 
+var util = require("util");
 var _ = require("lodash");
 var aws = require("aws-sdk");
 var table = require("text-table");
 
-aws.config.region = "eu-west-1";
+aws.config.region = aws.config.region || "eu-west-1";
 var ec2 = new aws.EC2;
 
 var input = process.argv.slice(2);
@@ -36,15 +37,18 @@ if (module === require.main) {
                         function mkName() {
                             let ff = '';
 
-                            let name = instance.InstanceId + ff;
-                            return name;
+                            let nameTag = _.find(instance.Tags, ["Key", "Name"])
+                            if (nameTag) {
+                                ff = util.format("(%s)", nameTag.Value)
+                            }
+                            return instance.InstanceId + ff;
                         }
 
                         return {
                             name: mkName(),
                             nodeType: instance.InstanceType,
                             internalIP: instance.PrivateIpAddress,
-                            publicIP: instance.PublicIpAddress,
+                            publicIP: instance.PublicIpAddress || "",
                             state: instance.State.Name
                         }
                     }
@@ -56,7 +60,11 @@ if (module === require.main) {
                         let output = table([header].concat(rows));
                         console.log(output);
                     }
-                    printCollection(instances)
+                    if (instances && instances.length > 0) {
+                        printCollection(instances)
+                    } else {
+                        console.log("Listed 0 items");
+                    }
                 }).catch(handleError);
 
             break;
