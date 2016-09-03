@@ -24,9 +24,10 @@ if (module === require.main) {
     var command = args._[0]
     switch (command) {
         case "node":
-            let filter = mkFilter(args.filter);
-            let options = {
-                Filters: filter
+            let options = {};
+            if (args.filter) {
+                let filter = mkFilter(args.filter);
+                options.Filters = filter
             }
             ec2.describeInstances(options).promise()
                 .then(function(res) {
