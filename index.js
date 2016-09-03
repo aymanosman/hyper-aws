@@ -32,38 +32,6 @@ if (module === require.main) {
             ec2.describeInstances(options).promise()
                 .then(function(res) {
                     var instances = _.flatMap(res.Reservations, (r) => r.Instances);
-
-                    function awsToNode(instance) {
-                        function mkName() {
-                            let ff = '';
-
-                            let nameTag = _.find(instance.Tags, ["Key",
-                                "Name"
-                            ])
-                            if (nameTag) {
-                                ff = util.format("(%s)", nameTag.Value)
-                            }
-                            return instance.InstanceId + ff;
-                        }
-
-                        return {
-                            name: mkName(),
-                            nodeType: instance.InstanceType,
-                            internalIP: instance.PrivateIpAddress,
-                            publicIP: instance.PublicIpAddress || "",
-                            state: instance.State.Name
-                        }
-                    }
-
-                    function printCollection(coll) {
-                        let data = _.values(coll)
-                        let rows = _.map(coll, (c) => _.values(awsToNode(c)))
-                        let header = ["NAME", "TYPE", "INTERNAL_IP",
-                            "EXTERNAL_IP", "STATE"
-                        ];
-                        let output = table([header].concat(rows));
-                        console.log(output);
-                    }
                     if (instances && instances.length > 0) {
                         printCollection(instances)
                     } else {
@@ -111,4 +79,35 @@ function mkFilter(filter) {
         Name: "tag:" + key,
         Values: [value]
     }];
+}
+
+function awsToNode(instance) {
+    function mkName() {
+        let ff = '';
+
+        let nameTag = _.find(instance.Tags, ["Key",
+            "Name"
+        ])
+        if (nameTag) {
+            ff = util.format("(%s)", nameTag.Value)
+        }
+        return instance.InstanceId + ff;
+    }
+
+    return {
+        name: mkName(),
+        nodeType: instance.InstanceType,
+        internalIP: instance.PrivateIpAddress || "",
+        publicIP: instance.PublicIpAddress || "",
+        state: instance.State.Name
+    }
+}
+
+function printCollection(coll) {
+    let data = _.values(coll)
+    let rows = _.map(coll, (c) => _.values(awsToNode(c)))
+    let header = ["NAME", "TYPE", "INTERNAL_IP", "EXTERNAL_IP", "STATE"];
+    let tableData = [header].concat(rows);
+    let output = table(tableData);
+    console.log(output);
 }
