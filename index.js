@@ -105,6 +105,7 @@ function awsToNode(instance) {
 
 function printCollection(coll) {
     let data = _.values(coll)
+    // WARNING: will blow up if any value is undefined
     let rows = _.map(coll, (c) => _.values(awsToNode(c)))
     let header = ["NAME", "TYPE", "INTERNAL_IP", "EXTERNAL_IP", "STATE"];
     let tableData = [header].concat(rows);
