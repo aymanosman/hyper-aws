@@ -20,6 +20,7 @@
     "aws-sdk": "^2.5.4",
     "blessed": "^0.1.81",
     "lodash": "^4.15.0",
+    "minimist": "^1.2.0",
     "text-table": "^0.2.0"
   }
 }

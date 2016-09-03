@@ -4,12 +4,16 @@ var util = require("util");
 var _ = require("lodash");
 var aws = require("aws-sdk");
 var table = require("text-table");
+var args = require("minimist")(process.argv.slice(2));
 
-aws.config.region = aws.config.region || "eu-west-1";
+if (args.region) {
+    aws.config.region = args.region;
+}
+if (!aws.config.region) {
+    console.log("Error: AWS_REGION or --region must be provided");
+    process.exit(1);
+}
 var ec2 = new aws.EC2;
-
-var input = process.argv.slice(2);
-var command = input.shift();
 
 function handleError(err) {
     console.error(err);
@@ -17,6 +21,7 @@ function handleError(err) {
 
 if (module === require.main) {
 
+    var command = args._[0]
     switch (command) {
         case "node":
             ec2.describeInstances().promise()
@@ -24,20 +29,12 @@ if (module === require.main) {
                     var instances = _.flatMap(res.Reservations, (r) => r.Instances);
 
                     function awsToNode(instance) {
-                        /**
-                     * description
-                        | NAME ||
-                        | ZONE ||
-                        | MACHINE_TYPE ||
-                        | INTERNAL_IP ||
-                        | EXTERNAL_IP ||
-                        | STATUS ||
-                     *
-                     */
                         function mkName() {
                             let ff = '';
 
-                            let nameTag = _.find(instance.Tags, ["Key", "Name"])
+                            let nameTag = _.find(instance.Tags, ["Key",
+                                "Name"
+                            ])
                             if (nameTag) {
                                 ff = util.format("(%s)", nameTag.Value)
                             }
@@ -56,7 +53,9 @@ if (module === require.main) {
                     function printCollection(coll) {
                         let data = _.values(coll)
                         let rows = _.map(coll, (c) => _.values(awsToNode(c)))
-                        let header = ["NAME", "TYPE", "INTERNAL_IP", "EXTERNAL_IP", "STATE"];
+                        let header = ["NAME", "TYPE", "INTERNAL_IP",
+                            "EXTERNAL_IP", "STATE"
+                        ];
                         let output = table([header].concat(rows));
                         console.log(output);
                     }
