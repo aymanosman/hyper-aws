@@ -24,7 +24,11 @@ if (module === require.main) {
     var command = args._[0]
     switch (command) {
         case "node":
-            ec2.describeInstances().promise()
+            let filter = mkFilter(args.filter);
+            let options = {
+                Filters: filter
+            }
+            ec2.describeInstances(options).promise()
                 .then(function(res) {
                     var instances = _.flatMap(res.Reservations, (r) => r.Instances);
 
@@ -88,8 +92,22 @@ if (module === require.main) {
             console.log([
                 "Usage:",
                 "",
-                "  status         SSS",
+                "  node           SSS",
                 "  status         SSS"
             ].join('\n'));
     }
+}
+
+/**
+ * Support filtering by tag
+ *
+ */
+function mkFilter(filter) {
+    let parts = filter.split("=");
+    let key = parts[0];
+    let value = parts[1];
+    return [{
+        Name: "tag:" + key,
+        Values: [value]
+    }];
 }
