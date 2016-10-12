@@ -6,15 +6,6 @@ var aws = require("aws-sdk");
 var table = require("text-table");
 var args = require("minimist")(process.argv.slice(2));
 
-if (args.region) {
-    aws.config.region = args.region;
-}
-if (!aws.config.region) {
-    console.log("Error: AWS_REGION or --region must be provided");
-    process.exit(1);
-}
-var ec2 = new aws.EC2;
-
 function handleError(err) {
     console.error(err);
 }
@@ -24,11 +15,15 @@ if (module === require.main) {
     var command = args._[0]
     switch (command) {
         case "node":
+            set_config_exn();
+
             let options = {};
             if (args.filter) {
                 let filter = mkFilter(args.filter);
                 options.Filters = filter
             }
+
+            var ec2 = new aws.EC2;
             ec2.describeInstances(options).promise()
                 .then(function(res) {
                     var instances = _.flatMap(res.Reservations, (r) => r.Instances);
@@ -42,6 +37,9 @@ if (module === require.main) {
             break;
 
         case "status":
+            set_config_exn();
+
+            var ec2 = new aws.EC2;
             ec2.describeInstances().promise()
                 .then(function(res) {
                     var id = res.Reservations[0].Instances[0].InstanceId;
@@ -52,9 +50,6 @@ if (module === require.main) {
                     var statuses = res.InstanceStatuses[0]
                     console.log('RRR', statuses);
                 }).catch(handleError);
-            break;
-        case 'sss':
-
             break;
 
         default:
@@ -105,10 +100,40 @@ function awsToNode(instance) {
 
 function printCollection(coll) {
     let data = _.values(coll)
-    // WARNING: will blow up if any value is undefined
+        // WARNING: will blow up if any value is undefined
     let rows = _.map(coll, (c) => _.values(awsToNode(c)))
     let header = ["NAME", "TYPE", "INTERNAL_IP", "EXTERNAL_IP", "STATE"];
     let tableData = [header].concat(rows);
     let output = table(tableData);
     console.log(output);
+}
+
+function set_config_exn() {
+    set_region_exn();
+    set_creds_exn();
+}
+
+function set_region_exn() {
+    if (args.region) {
+        aws.config.region = args.region;
+    } else {
+        console.log(
+            "Error: --region must be provided (will not assume default region)"
+        );
+        process.exit(1);
+    }
+}
+
+function set_creds_exn() {
+    if (args.profile) {
+        aws.config.credentials = new aws.SharedIniFileCredentials({
+            profile: args.profile
+        });
+    } else {
+        console.log(
+            "Error: --profile must be provided (will not assume default profile)"
+        );
+        process.exit(1);
+
+    }
 }
