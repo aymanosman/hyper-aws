@@ -1,0 +1,3 @@
+* TODO Make installable (maybe package in container)
+* DONE Define alias haw="docker run --rm -v $HOME/.aws:/root/.aws aosman/haw:0.1"
+* TODO Support CloudWatch, e.g. aws cloudwatch list-metrics --region us-west-2 --namespace AWS/RDS
