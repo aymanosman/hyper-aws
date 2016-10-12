@@ -36,28 +36,33 @@ if (module === require.main) {
 
             break;
 
-        case "status":
-            set_config_exn();
+        // case "status":
+        //     set_config_exn();
 
-            var ec2 = new aws.EC2;
-            ec2.describeInstances().promise()
-                .then(function(res) {
-                    var id = res.Reservations[0].Instances[0].InstanceId;
-                    return ec2.describeInstanceStatus({
-                        InstanceIds: [id]
-                    }).promise();
-                }).then(function(res) {
-                    var statuses = res.InstanceStatuses[0]
-                    console.log('RRR', statuses);
-                }).catch(handleError);
+        //     var ec2 = new aws.EC2;
+        //     ec2.describeInstances().promise()
+        //         .then(function(res) {
+        //             var id = res.Reservations[0].Instances[0].InstanceId;
+        //             return ec2.describeInstanceStatus({
+        //                 InstanceIds: [id]
+        //             }).promise();
+        //         }).then(function(res) {
+        //             var statuses = res.InstanceStatuses[0]
+        //             console.log('RRR', statuses);
+        //         }).catch(handleError);
+        //     break;
+
+        case "metric":
+            console.log("TODO");
             break;
+
 
         default:
             console.log([
                 "Usage:",
                 "",
                 "  node           SSS",
-                "  status         SSS"
+                // "  status         SSS"
             ].join('\n'));
     }
 }
@@ -115,6 +120,7 @@ function set_config_exn() {
 
 function set_region_exn() {
     if (args.region) {
+        // TODO: handle array, for overriding
         aws.config.region = args.region;
     } else {
         console.log(
