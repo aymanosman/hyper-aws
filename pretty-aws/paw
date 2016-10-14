@@ -1,3 +1,5 @@
-#!./vendor/bin/node
+#!/bin/bash
 
-console.log("Hello");
+./vendor/node-v6.8.0-darwin-x64/bin/node index.js --profile work --region us-west-2 $@
+
+

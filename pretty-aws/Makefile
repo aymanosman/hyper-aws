@@ -1,5 +1,6 @@
 setup:
 	@echo "Downloading Node 6"
+	@mkdir -p vendor
 	wget -O vendor/node6.tar.gz https://nodejs.org/dist/v6.8.0/node-v6.8.0-darwin-x64.tar.gz
 	cd vendor && tar -xzf node6.tar.gz
 	@echo "Testing node, running node --version"
