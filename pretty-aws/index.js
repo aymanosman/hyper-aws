@@ -203,13 +203,17 @@ function handle_metric(args) {
 }
 
 function handle_stat(args) {
-    let _5_MINS = 1000 * 60 * 5;
+    let _N_MINS = 1000 * 60 * 10;
     let options = {
         Statistics: ["Average", "Sum", "SampleCount", "Minimum", "Maximum"],
         Period: 60,
-        StartTime: (new Date((new Date).getTime() - _5_MINS)).toISOString(),
+        StartTime: (new Date((new Date).getTime() - _N_MINS)).toISOString(),
         EndTime: (new Date).toISOString()
     };
+
+  if (args.interval) {
+    console.log("TODO support --interval");
+  }
 
     require_arg_exn("namespace", "Namespace", args.namespace, options);
     require_arg_exn("name", "MetricName", args.name, options);
@@ -217,9 +221,40 @@ function handle_stat(args) {
 
     let cloudwatch = new aws.CloudWatch;
     cloudwatch.getMetricStatistics(options).promise()
-        .then(function(res) {
-            console.log("RRR", res);
-        }).catch(handleError);
+    .then(function(res) {
+      let meta = {
+        Namespace: args.namespace,
+        MetricName: args.name
+      }
+      print_datapoints(res.Datapoints, meta);
+    }).catch(handleError);
+}
+
+function print_datapoints(coll, meta) {
+
+  function getRow(x) {
+    return {
+      namespace: meta.Namespace,
+      metricname: meta.MetricName,
+      timestamp: x.Timestamp,
+      value: x.Average, // FIXME
+      unit: x.Unit
+    }
+  }
+
+  if (coll && coll.length > 0) {
+    let data = _.values(coll);
+    let rows = _.map(coll, (x) => _.values(getRow(x)))
+    let header = ["NAMESPACE", "METRICNAME", "TIMESTAMP", "VALUE", "UNIT"];
+
+    let tableData = [header].concat(rows);
+
+    let output = table(tableData);
+    console.log(output);
+    console.log("Listed %s items", coll.length);
+  } else {
+    console.log("Listed 0 items");
+  }
 }
 
 function sortBy(coll, field) {
@@ -267,5 +302,6 @@ function require_arg_exn(arg_name, awsName, arg, options) {
 }
 
 function parseDimensions(dimensions) {
+  console.log("TODO: implement parseDimensions")
     return [{Name: "VolumeId", Value: "vol-f2378846"}];
 }
