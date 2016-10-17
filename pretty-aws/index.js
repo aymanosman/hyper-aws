@@ -73,8 +73,7 @@ function printInstances(coll) {
     }
 
     function getTags(instance) {
-        return _(instance.Tags).map((d) => [d.Key, "=", d.Value].join(""))
-            .value().join(",") || "<none>";
+      return format_tags_or_dimensions(instance.Tags);
     }
 
     let mappings = [
@@ -203,28 +202,33 @@ function handle_metric(args) {
 }
 
 function handle_stat(args) {
-    let _N_MINS = 1000 * 60 * 10;
-    let options = {
-        Statistics: ["Average", "Sum", "SampleCount", "Minimum", "Maximum"],
-        Period: 60,
-        StartTime: (new Date((new Date).getTime() - _N_MINS)).toISOString(),
-        EndTime: (new Date).toISOString()
-    };
+  let N_MINS = 1000 * 60 * 10;
+  let options = {
+    Statistics: ["Average", "Sum", "SampleCount", "Minimum", "Maximum"],
+    Period: 60,
+    StartTime: (new Date((new Date).getTime() - N_MINS)).toISOString(),
+    EndTime: (new Date).toISOString()
+  };
 
   if (args.interval) {
     console.log("TODO support --interval");
   }
 
-    require_arg_exn("namespace", "Namespace", args.namespace, options);
-    require_arg_exn("name", "MetricName", args.name, options);
-    require_arg_exn("dimensions", "Dimensions", parseDimensions(args.dimensions), options);
+  // args2 = convert_args(args);
+  args.dimensions = parseDimensions(args.dimensions)
+  console.log("DDD", args.dimensions);
 
-    let cloudwatch = new aws.CloudWatch;
-    cloudwatch.getMetricStatistics(options).promise()
+  require_arg_exn("Namespace", args, options);
+  require_arg_exn("MetricName", args, options);
+  require_arg_exn("Dimensions", args , options);
+
+  let cloudwatch = new aws.CloudWatch;
+  cloudwatch.getMetricStatistics(options).promise()
     .then(function(res) {
       let meta = {
         Namespace: args.namespace,
-        MetricName: args.name
+        MetricName: args.metricname,
+        Dimensions: args.dimensions
       }
       print_datapoints(res.Datapoints, meta);
     }).catch(handleError);
@@ -236,6 +240,7 @@ function print_datapoints(coll, meta) {
     return {
       namespace: meta.Namespace,
       metricname: meta.MetricName,
+      Dimensions: format_tags_or_dimensions(meta.Dimensions),
       timestamp: x.Timestamp,
       value: x.Average, // FIXME
       unit: x.Unit
@@ -245,7 +250,7 @@ function print_datapoints(coll, meta) {
   if (coll && coll.length > 0) {
     let data = _.values(coll);
     let rows = _.map(coll, (x) => _.values(getRow(x)))
-    let header = ["NAMESPACE", "METRICNAME", "TIMESTAMP", "VALUE", "UNIT"];
+    let header = ["NAMESPACE", "METRICNAME", "DIMENSIONS", "TIMESTAMP", "VALUE", "UNIT"];
 
     let tableData = [header].concat(rows);
 
@@ -293,15 +298,22 @@ function exit(message) {
  * Misc
  *
  */
-function require_arg_exn(arg_name, awsName, arg, options) {
-    if (arg) {
-        options[awsName] = arg;
-    } else {
-        exit(["--", arg_name, " required"].join(""))
-    }
+function require_arg_exn(aws_name, args, options) {
+  let arg_name = aws_name.toLowerCase()
+  let arg = args[arg_name]
+  if (arg) {
+    options[aws_name] = arg;
+  } else {
+    exit(["--", arg_name, " required"].join(""))
+  }
 }
 
 function parseDimensions(dimensions) {
   console.log("TODO: implement parseDimensions")
     return [{Name: "VolumeId", Value: "vol-f2378846"}];
+}
+
+function format_tags_or_dimensions(name_value_pairs) {
+  return _(name_value_pairs).map((d) => [d.Key || d.Name, "=", d.Value].join(""))
+    .value().join(",") || "<none>";
 }
