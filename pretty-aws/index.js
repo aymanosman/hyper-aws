@@ -4,6 +4,8 @@ var util = require("util");
 var _ = require("lodash");
 var aws = require("aws-sdk");
 var table = require("text-table");
+var moment = require("moment");
+
 var args = require("minimist")(process.argv.slice(2));
 
 /**
@@ -188,7 +190,8 @@ function handle_metric(args) {
   }
   let cloudwatch = new aws.CloudWatch;
   cloudwatch.listMetrics({
-    Namespace: namespace
+    Namespace: namespace,
+    MetricName: args.metricname
   }).promise()
     .then(function(res) {
       var metrics;
@@ -205,18 +208,38 @@ function handle_stat(args) {
   let N_MINS = 1000 * 60 * 10;
   let options = {
     Statistics: ["Average", "Sum", "SampleCount", "Minimum", "Maximum"],
-    Period: 60,
-    StartTime: (new Date((new Date).getTime() - N_MINS)).toISOString(),
-    EndTime: (new Date).toISOString()
+    Period: 60
   };
 
+  function parse_intervals(interval_string) {
+    let [start0, end0] = interval_string.split(",");
+    let start1 = parseInt(start0.replace(/(\d+)/, "$1"), 10);
+    return {
+      StartTime: moment().subtract(moment.duration(start1, 'minutes')).toISOString(),
+      EndTime: moment().toISOString()
+    }
+
+  }
+
   if (args.interval) {
-    console.log("TODO support --interval");
+    // TODO: Can support parsing ISO 8601 durations through moment.js.
+    console.log("WARNING only supporting minutes, i.e. 10m");
+    let intervals = parse_intervals(args.interval);
+    console.log("Using interval:");
+    console.log("StartTime: ", intervals.StartTime);
+    console.log("EndTime:   ", intervals.EndTime);
+    options = _.merge(options, intervals);
+  } else {
+    let default_intervals = {
+      StartTime: (new Date((new Date).getTime() - N_MINS)).toISOString(),
+      EndTime: (new Date).toISOString()
+    }
+    options = _.merge(options, default_intervals);
   }
 
   // args2 = convert_args(args);
-  args.dimensions = parseDimensions(args.dimensions)
-  console.log("DDD", args.dimensions);
+  args.dimensions = parse_dimensions(args.dimensions)
+  console.log("TODO: implement parse_dimensions", args.dimensions);
 
   require_arg_exn("Namespace", args, options);
   require_arg_exn("MetricName", args, options);
@@ -308,8 +331,7 @@ function require_arg_exn(aws_name, args, options) {
   }
 }
 
-function parseDimensions(dimensions) {
-  console.log("TODO: implement parseDimensions")
+function parse_dimensions(dimensions) {
   return [{Name: "VolumeId", Value: "vol-f2378846"}];
 }
 
