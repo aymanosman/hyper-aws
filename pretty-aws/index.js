@@ -253,7 +253,7 @@ function handle_stat(args) {
         MetricName: args.metricname,
         Dimensions: args.dimensions
       }
-      print_datapoints(res.Datapoints, meta);
+      print_datapoints(_.sortBy(res.Datapoints, "Timestamp"), meta);
     }).catch(handleError);
 }
 
