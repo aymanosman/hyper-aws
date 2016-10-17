@@ -46,20 +46,6 @@ if (module === require.main) {
   }
 }
 
-/**
- * Support filtering by tag
- *
- */
-function mkFilter(filter) {
-  let parts = filter.split("=");
-  let key = parts[0];
-  let value = parts[1];
-  return [{
-    Name: "tag:" + key,
-    Values: [value]
-  }];
-}
-
 function printInstances(coll) {
   function getName(instance) {
     let ff = '';
@@ -165,7 +151,7 @@ function set_creds_exn() {
  */
 function handle_node(args) {
   if (args.filter) {
-    let filter = mkFilter(args.filter);
+    let filter = parse_filter(args.filter);
     options.Filters = filter
   }
 
@@ -237,9 +223,7 @@ function handle_stat(args) {
     options = _.merge(options, default_intervals);
   }
 
-  // args2 = convert_args(args);
   args.dimensions = parse_dimensions(args.dimensions)
-  console.log("TODO: implement parse_dimensions", args.dimensions);
 
   require_arg_exn("Namespace", args, options);
   require_arg_exn("MetricName", args, options);
@@ -331,11 +315,37 @@ function require_arg_exn(aws_name, args, options) {
   }
 }
 
-function parse_dimensions(dimensions) {
-  return [{Name: "VolumeId", Value: "vol-f2378846"}];
-}
-
 function format_tags_or_dimensions(name_value_pairs) {
   return _(name_value_pairs).map((d) => [d.Key || d.Name, "=", d.Value].join(""))
     .value().join(",") || "<none>";
+}
+
+function parse_dimensions(dimensions) {
+  try {
+    let [key, val] = parse_key_value(dimensions);
+    return [{
+      Name: key,
+      Value: val
+    }];
+  } catch (err) {
+    console.log("Error:", err.message);
+    return null;
+  }
+}
+
+function parse_filter(filter) {
+  let [key, val] = parse_key_value(filter);
+  return [{
+    Name: "tag:" + key,
+    Values: [value]
+  }];
+}
+
+function parse_key_value(kv) {
+  let [key, value] = kv.split("=");
+  if (!value) {
+    throw new Error("<key>=<value> missing value");
+  } else {
+    return [key, value];
+  }
 }
