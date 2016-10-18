@@ -211,9 +211,6 @@ function handle_stat(args) {
     // TODO: Can support parsing ISO 8601 durations through moment.js.
     console.log("WARNING only supporting minutes, i.e. 10m");
     let intervals = parse_intervals(args.interval);
-    console.log("Using interval:");
-    console.log("StartTime: ", intervals.StartTime);
-    console.log("EndTime:   ", intervals.EndTime);
     options = _.merge(options, intervals);
   } else {
     let default_intervals = {
