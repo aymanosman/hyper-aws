@@ -198,18 +198,20 @@ function handle_stat(args) {
   };
 
   function parse_intervals(interval_string) {
-    let [start0, end0] = interval_string.split(",");
-    let start1 = parseInt(start0.replace(/(\d+)/, "$1"), 10);
+    // Support intervals via ISO 8601 durations. Needs testing.
+    // Trick is to convert something like 10m to PT10M, 2h to PT2H, etc.
+    // Not yet supporting an end interval, always setting to "now".
+    let [start0, _end0] = interval_string.split(",");
+    let iso_duration = "PT" + start0.toUpperCase();
     return {
-      StartTime: moment().subtract(moment.duration(start1, 'minutes')).toISOString(),
+      StartTime: moment().subtract(moment.duration(iso_duration))
+        .toISOString(),
       EndTime: moment().toISOString()
     }
 
   }
 
   if (args.interval) {
-    // TODO: Can support parsing ISO 8601 durations through moment.js.
-    console.log("WARNING only supporting minutes, i.e. 10m");
     let intervals = parse_intervals(args.interval);
     options = _.merge(options, intervals);
   } else {
