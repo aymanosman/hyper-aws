@@ -1,5 +1,8 @@
 #!/bin/bash
 
-./vendor/node-v6.8.0-darwin-x64/bin/node index.js --profile work --region us-west-2 $@
+BASE_DIR=/Users/aosman/code/hyper-aws/pretty-aws
+NODE=$BASE_DIR/vendor/node-v6.8.0-darwin-x64/bin/node
+
+$NODE $BASE_DIR/index.js --profile work --region us-west-2 $@
 
 
