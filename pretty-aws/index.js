@@ -222,11 +222,13 @@ function handle_stat(args) {
     options = _.merge(options, default_intervals);
   }
 
-  args.dimensions = parse_dimensions(args.dimensions)
+  if (args.dimensions) {
+    args.dimensions = parse_dimensions(args.dimensions)
+  }
 
   require_arg_exn("Namespace", args, options);
   require_arg_exn("MetricName", args, options);
-  require_arg_exn("Dimensions", args , options);
+  options.Dimensions = args.dimensions || [];
 
   let cloudwatch = new aws.CloudWatch;
   cloudwatch.getMetricStatistics(options).promise()
