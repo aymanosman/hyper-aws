@@ -338,7 +338,7 @@ function parse_filter(filter) {
   let [key, val] = parse_key_value(filter);
   return [{
     Name: "tag:" + key,
-    Values: [value]
+    Values: [val]
   }];
 }
 
